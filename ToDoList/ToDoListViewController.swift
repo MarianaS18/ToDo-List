@@ -9,9 +9,17 @@ import UIKit
 
 class ToDoListViewController: UITableViewController {
     var itemArray = ["Køb æbler", "Kør til lægen", "Lav lektier i iOS"]
+    
+    // users default database
+    let defaults = UserDefaults.standard
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // add array with data to dafault users database
+        if let items = defaults.array(forKey: "ToDoListArray") as? [String] {
+            itemArray = items
+        }
     }
     
     
@@ -59,11 +67,13 @@ class ToDoListViewController: UITableViewController {
         
         // create action to alert
         // runs when user clicks "Add Item" on alert
-        // add a new Item to ToDo List
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             if newItem.text != "" {
                 self.itemArray.append(newItem.text!)
             }
+            
+            // add a new Item to default database
+            self.defaults.set(self.itemArray, forKey: "ToDoListArray")
             
             // reloads table view, so we can se the new item
             self.tableView.reloadData()
