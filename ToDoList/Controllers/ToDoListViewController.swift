@@ -9,10 +9,10 @@ import UIKit
 
 class ToDoListViewController: UITableViewController {
     var itemArray = [Item]()
+    // object that provides an interface to the file system
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+   
     
-    // users default database
-    let defaults = UserDefaults.standard
-
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -29,7 +29,7 @@ class ToDoListViewController: UITableViewController {
         itemArray.append(newItem3)
         
         // add array with data to dafault users database
-//        if let items = defaults.array(forKey: "ToDoListArray") as? [String] {
+//        if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
 //            itemArray = items
 //        }
     }
@@ -64,11 +64,10 @@ class ToDoListViewController: UITableViewController {
         // checks done property
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
+        saveItems()
+        
         // selection dissapears slowly 
         tableView.deselectRow(at: indexPath, animated: true)
-        
-        // reloads table view, so we can se if a cell was selected or unselected
-        tableView.reloadData()
     }
     
     // MARK: - Add New Items
@@ -87,11 +86,7 @@ class ToDoListViewController: UITableViewController {
                 self.itemArray.append(Item(title: newItem.text!, done: false))
             }
             
-            // add a new Item to default database
-            self.defaults.set(self.itemArray, forKey: "ToDoListArray")
-            
-            // reloads table view, so we can se the new item
-            self.tableView.reloadData()
+            self.saveItems()
         }
         
         // create textfield in the alert
@@ -105,6 +100,24 @@ class ToDoListViewController: UITableViewController {
         
         // shows alert on the screen
         present(alert, animated: true, completion: nil)
+    }
+    
+    
+    // MARK: - Model Manipulation Methods
+    func saveItems() {
+        // new object of the type PropertyListEncoder
+        let encoder = PropertyListEncoder()
+        
+        // will encode itemArray into Property List
+        do {
+            let data = try encoder.encode(self.itemArray)
+            try data.write(to: self.dataFilePath!)
+        } catch {
+            print("Error encoding item array, \(error)")
+        }
+        
+        // reloads table view, so we can se the new item and if a cell was selected or unselected
+        self.tableView.reloadData()
     }
 }
 
