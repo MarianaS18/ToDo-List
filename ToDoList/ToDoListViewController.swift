@@ -35,7 +35,14 @@ class ToDoListViewController: UITableViewController {
     
     // works with selected cell
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print(itemArray[indexPath.row])
+        
+        if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
+            // remove the checkmark, if it was checked
+            tableView.cellForRow(at: indexPath)?.accessoryType = .none
+        } else {
+            // add checkmark to celected cell
+            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
+        }
         
         // selection dissapears slowly 
         tableView.deselectRow(at: indexPath, animated: true)
