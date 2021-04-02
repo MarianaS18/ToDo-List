@@ -12,7 +12,6 @@ class ToDoListViewController: UITableViewController {
     // object that provides an interface to the file system
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
    
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         loadItems()
