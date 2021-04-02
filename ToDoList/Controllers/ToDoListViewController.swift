@@ -15,23 +15,7 @@ class ToDoListViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        var newItem1 = Item()
-        newItem1.title = "Køb æbler"
-        itemArray.append(newItem1)
-        
-        var newItem2 = Item()
-        newItem2.title = "Kør til lægen"
-        itemArray.append(newItem2)
-        
-        var newItem3 = Item()
-        newItem3.title = "Lav lektier i iOS"
-        itemArray.append(newItem3)
-        
-        // add array with data to dafault users database
-//        if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
-//            itemArray = items
-//        }
+        loadItems()
     }
     
     
@@ -118,6 +102,18 @@ class ToDoListViewController: UITableViewController {
         
         // reloads table view, so we can se the new item and if a cell was selected or unselected
         self.tableView.reloadData()
+    }
+    
+    // decodes data and loads them to table view
+    func loadItems() {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Error decoding items, \(error)")
+            }
+        }
     }
 }
 
