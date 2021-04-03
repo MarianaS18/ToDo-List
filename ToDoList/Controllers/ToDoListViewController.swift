@@ -21,7 +21,7 @@ class ToDoListViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-    
+        
         loadItems()
     }
     
@@ -117,9 +117,8 @@ class ToDoListViewController: UITableViewController {
         self.tableView.reloadData()
     }
     
-    func loadItems() {
-        // creats an object of type NSFetchRequest<Item>, which fetches all items
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
+    // Item.fetchRequest() - fetches all items
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
         do {
             // saves result of request in array
             itemArray = try context.fetch(request)
@@ -129,4 +128,29 @@ class ToDoListViewController: UITableViewController {
     }
 }
 
+
+// MARK: - UISearchBarDelegate
+
+extension ToDoListViewController: UISearchBarDelegate {
+    
+    // this tells the delegate that the search button was tapped
+    // and here we want to reload table view with the text, that user has tapped
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        // request that fetches all items
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        
+        // specifies what we want back wrom request
+        // [cd] - specifies case and diacritic insensitivity
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        
+        // sort the data whitch we get back
+        // ascending: true - sort the data in alphabetical order
+        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+        request.sortDescriptors = [sortDescriptor]
+        
+        // run our request and fetch the result
+        loadItems(with: request)
+    }
+    
+}
 
