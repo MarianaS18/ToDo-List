@@ -10,7 +10,7 @@ import CoreData
 
 class CategoryTableViewController: UITableViewController {
     
-    var categoryArray = [ItemCategory]()
+    var categoryArray = [Category]()
     
     // UIApplication.shared - singleton app instance of the current app
     // delegate - delegate of app object
@@ -38,8 +38,8 @@ class CategoryTableViewController: UITableViewController {
         // runs when user click "Add Category"
         let action = UIAlertAction(title: "Add Category", style: .default) { (action) in
             
-            // Category - the table
-            let newCategory = ItemCategory(context: self.context)
+            // ItemCategory - the table
+            let newCategory = Category(context: self.context)
             newCategory.name = textField.text
             
             self.categoryArray.append(newCategory)
@@ -48,7 +48,7 @@ class CategoryTableViewController: UITableViewController {
         
         // create textfield in the alert
         alert.addTextField { (alertTextField) in
-            alertTextField.placeholder = "Create new category"
+            alertTextField.placeholder = "Create a new category"
             textField = alertTextField
         }
         
@@ -70,24 +70,36 @@ class CategoryTableViewController: UITableViewController {
     // create a cell and return it to the table view
     // method calls for every cell
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let category = categoryArray[indexPath.row]
-        
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
-        cell.textLabel?.text = category.name
-        
+        cell.textLabel?.text = categoryArray[indexPath.row].name
         return cell
     }
     
     
-    
     // MARK: - TbaleView Delegate Methods
     
+    // runs when we celect a cell
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        // change from CategoryViewController to ToDoLostViewController
+        performSegue(withIdentifier: "goToItems", sender: self)
+    }
+    
+    // runs just before performSegue method
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // we set the destination viewController to ToDoListViewController
+        let destinationVC = segue.destination as! ToDoListViewController
+        // we take the category that coresponds to the celected cell
+        if let indexPath = tableView.indexPathForSelectedRow {
+            destinationVC.selectedCategory = categoryArray[indexPath.row]
+        }
+        
+    }
     
     
     // MARK: - Data manipulation methods
     
     func loadCategories() {
-        let request: NSFetchRequest<ItemCategory> = ItemCategory.fetchRequest()
+        let request: NSFetchRequest<Category> = Category.fetchRequest()
         
         do {
             categoryArray = try context.fetch(request)
@@ -103,7 +115,7 @@ class CategoryTableViewController: UITableViewController {
             print("Error saving context, \(error)")
         }
         
-        self.tableView.reloadData()
+        tableView.reloadData()
     }
     
 }
