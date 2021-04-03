@@ -6,14 +6,22 @@
 //
 
 import UIKit
+import CoreData
 
 class ToDoListViewController: UITableViewController {
     var itemArray = [Item]()
-    // object that provides an interface to the file system
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
-   
+    
+    
+    // UIApplication.shared - singleton app instance of the current app
+    // delegate - delegate of app object
+    // we casting UIApplication.shared.delegate as our class AppDelegate, so we have accec to our class
+    // we get the AppDelegates property - persistentContainer
+    // we get a viewContext of persistentContainer
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+    
         loadItems()
     }
     
@@ -44,9 +52,16 @@ class ToDoListViewController: UITableViewController {
     
     // works with selected cell
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+        // remove an item from database
+        // context.delete(itemArray[indexPath.row])
+        // removes an item from array whitch is used to load up the tableview data source
+        // itemArray.remove(at: indexPath.row)
+        
         // checks done property
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
+        // saves context to persistent container
         saveItems()
         
         // selection dissapears slowly 
@@ -57,7 +72,7 @@ class ToDoListViewController: UITableViewController {
     
     // runs when user presses add(+) button
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-        var newItem = UITextField()
+        var textField = UITextField()
         
         // create alert
         let alert = UIAlertController(title: "Add New ToDo Item", message: "", preferredStyle: .alert)
@@ -65,17 +80,20 @@ class ToDoListViewController: UITableViewController {
         // create action to alert
         // runs when user clicks "Add Item" on alert
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            if newItem.text != "" {
-                self.itemArray.append(Item(title: newItem.text!, done: false))
-            }
             
+            // Item - en entity (tabelnavn)
+            let newItem = Item(context: self.context)
+            newItem.title = textField.text
+            newItem.done = false
+            
+            self.itemArray.append(newItem)
             self.saveItems()
         }
         
         // create textfield in the alert
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Create new item"
-            newItem = alertTextField
+            textField = alertTextField
         }
         
         // adds action to alert
@@ -88,30 +106,25 @@ class ToDoListViewController: UITableViewController {
     
     // MARK: - Model Manipulation Methods
     func saveItems() {
-        // new object of the type PropertyListEncoder
-        let encoder = PropertyListEncoder()
-        
-        // will encode itemArray into Property List
         do {
-            let data = try encoder.encode(self.itemArray)
-            try data.write(to: self.dataFilePath!)
+            // data gemmes fra context til persistent container
+            try context.save()
         } catch {
-            print("Error encoding item array, \(error)")
+            print("Error saving context, \(error)")
         }
         
         // reloads table view, so we can se the new item and if a cell was selected or unselected
         self.tableView.reloadData()
     }
     
-    // decodes data and loads them to table view
     func loadItems() {
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            let decoder = PropertyListDecoder()
-            do {
-                itemArray = try decoder.decode([Item].self, from: data)
-            } catch {
-                print("Error decoding items, \(error)")
-            }
+        // creats an object of type NSFetchRequest<Item>, which fetches all items
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+            // saves result of request in array
+            itemArray = try context.fetch(request)
+        } catch {
+            print("Error fetching data from context, \(error)")
         }
     }
 }
