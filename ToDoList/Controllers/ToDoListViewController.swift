@@ -125,6 +125,8 @@ class ToDoListViewController: UITableViewController {
         } catch {
             print("Error fetching data from context, \(error)")
         }
+        
+        tableView.reloadData()
     }
 }
 
@@ -150,6 +152,18 @@ extension ToDoListViewController: UISearchBarDelegate {
         
         // run our request and fetch the result
         loadItems(with: request)
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            loadItems()
+            
+            // DispatchQueue is a manager who assign projekts to different threads
+            DispatchQueue.main.async {
+                // notifies that search bar is no longer selected and keybord should go away
+                searchBar.resignFirstResponder()
+            }
+        }
     }
     
 }
