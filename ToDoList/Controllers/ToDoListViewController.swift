@@ -11,6 +11,12 @@ import CoreData
 class ToDoListViewController: UITableViewController {
     var itemArray = [Item]()
     
+    var selectedCategory: Category? {
+        // did set runs when selected category gets set with a value
+        didSet {
+            loadItems()
+        }
+    }
     
     // UIApplication.shared - singleton app instance of the current app
     // delegate - delegate of app object
@@ -21,8 +27,6 @@ class ToDoListViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        loadItems()
     }
     
     
@@ -85,6 +89,7 @@ class ToDoListViewController: UITableViewController {
             let newItem = Item(context: self.context)
             newItem.title = textField.text
             newItem.done = false
+            newItem.parentCategory = self.selectedCategory
             
             self.itemArray.append(newItem)
             self.saveItems()
@@ -118,7 +123,16 @@ class ToDoListViewController: UITableViewController {
     }
     
     // Item.fetchRequest() - fetches all items
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
+        // the query that get only items from the selected category
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
+        }
+        
         do {
             // saves result of request in array
             itemArray = try context.fetch(request)
@@ -143,7 +157,7 @@ extension ToDoListViewController: UISearchBarDelegate {
         
         // specifies what we want back wrom request
         // [cd] - specifies case and diacritic insensitivity
-        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
         
         // sort the data whitch we get back
         // ascending: true - sort the data in alphabetical order
@@ -151,7 +165,7 @@ extension ToDoListViewController: UISearchBarDelegate {
         request.sortDescriptors = [sortDescriptor]
         
         // run our request and fetch the result
-        loadItems(with: request)
+        loadItems(with: request, predicate: predicate)
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
